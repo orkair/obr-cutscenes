@@ -3,6 +3,7 @@ import "./player.css";
 import {
   CURRENT_KEY,
   CurrentPlayback,
+  Fit,
   MODAL_ID,
   Source,
   parseSource,
@@ -37,7 +38,7 @@ function showMessage(text: string) {
 
 /* ---------- Arquivo (mp4/webm) ---------- */
 
-async function createFileEngine(url: string): Promise<Engine> {
+async function createFileEngine(url: string, fit: Fit): Promise<Engine> {
   const video = document.createElement("video");
   video.playsInline = true;
   video.setAttribute("webkit-playsinline", "");
@@ -45,6 +46,7 @@ async function createFileEngine(url: string): Promise<Engine> {
   video.controls = false;
   video.disablePictureInPicture = true;
   video.src = url;
+  video.style.objectFit = fit;
   stage.appendChild(video);
   shield.hidden = true; // o <video> não tem UI própria
 
@@ -99,7 +101,30 @@ function loadYouTubeApi(): Promise<any> {
   });
 }
 
-async function createYouTubeEngine(videoId: string, offset: number): Promise<Engine> {
+/**
+ * O iframe do YouTube não tem object-fit. Para "preencher", aumentamos o iframe
+ * até cobrir a tela mantendo 16:9 e centralizamos (o excesso fica fora da tela).
+ */
+function layoutYouTube(frame: HTMLElement, fit: Fit) {
+  const ratio = 16 / 9;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  let fw = w;
+  let fh = h;
+  if (fit === "cover") {
+    if (w / h > ratio) fh = w / ratio;
+    else fw = h * ratio;
+  }
+  Object.assign(frame.style, {
+    inset: "auto",
+    width: `${fw}px`,
+    height: `${fh}px`,
+    left: `${(w - fw) / 2}px`,
+    top: `${(h - fh) / 2}px`,
+  });
+}
+
+async function createYouTubeEngine(videoId: string, offset: number, fit: Fit): Promise<Engine> {
   const YT = await loadYouTubeApi();
   const host = document.createElement("div");
   stage.appendChild(host);
@@ -137,6 +162,10 @@ async function createYouTubeEngine(videoId: string, offset: number): Promise<Eng
   // Garante que o iframe do YouTube pode tocar com som (delegação de autoplay)
   const iframe = player.getIframe() as HTMLIFrameElement;
   iframe.setAttribute("allow", "autoplay; encrypted-media; picture-in-picture");
+  iframe.classList.add("yt");
+  const relayout = () => layoutYouTube(iframe, fit);
+  relayout();
+  window.addEventListener("resize", relayout);
 
   const isPlaying = () => player.getPlayerState() === YT.PlayerState.PLAYING;
 
@@ -183,6 +212,7 @@ async function run() {
     stopBtn.onclick = () => stopCutscene();
   }
 
+  const fit: Fit = cur.fit ?? "cover";
   const source: Source | null = parseSource(cur.url);
   if (!source) {
     showMessage("Link de vídeo inválido.");
@@ -194,8 +224,8 @@ async function run() {
   try {
     engine =
       source.kind === "youtube"
-        ? await createYouTubeEngine(source.videoId, source.start)
-        : await createFileEngine(source.url);
+        ? await createYouTubeEngine(source.videoId, source.start, fit)
+        : await createFileEngine(source.url, fit);
   } catch (e) {
     showMessage((e as Error).message);
     await wait(4000);

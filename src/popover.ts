@@ -59,6 +59,7 @@ function render() {
               <span class="title">${esc(c.title)}<span class="tag">${kind}</span></span>
               <span class="url">${esc(c.url)}</span>
             </div>
+            <button class="ghost" data-fit="${c.id}" title="${(c.fit ?? "cover") === "cover" ? "Preenchendo a tela (clique para mostrar inteiro)" : "Mostrando inteiro (clique para preencher a tela)"}">${(c.fit ?? "cover") === "cover" ? "⛶" : "▭"}</button>
             <button class="icon" data-play="${c.id}" title="Disparar para todos">▶</button>
             <button class="ghost" data-del="${c.id}" title="Remover">✕</button>
           </li>`;
@@ -86,6 +87,19 @@ function bind() {
     b.addEventListener("click", async () => {
       const c = (await getLibrary()).find((x) => x.id === b.dataset.play);
       if (c) await playCutscene(c);
+    }),
+  );
+
+  app.querySelectorAll<HTMLButtonElement>("[data-fit]").forEach((b) =>
+    b.addEventListener("click", async () => {
+      const list = await getLibrary();
+      await setLibrary(
+        list.map((x) =>
+          x.id === b.dataset.fit
+            ? { ...x, fit: (x.fit ?? "cover") === "cover" ? ("contain" as const) : ("cover" as const) }
+            : x,
+        ),
+      );
     }),
   );
 

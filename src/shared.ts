@@ -8,10 +8,14 @@ export const MODAL_ID = `${ID}/modal`;
 /** Tempo entre o GM clicar e o vídeo começar, para todos carregarem. */
 export const LEAD_MS = 2500;
 
+/** cover = preenche a tela (corta bordas); contain = mostra o vídeo inteiro (pode ter faixas pretas) */
+export type Fit = "cover" | "contain";
+
 export interface Cutscene {
   id: string;
   title: string;
   url: string;
+  fit?: Fit;
 }
 
 /** O que está tocando agora. Fica no metadata da sala (sincronizado para todos). */
@@ -19,6 +23,7 @@ export interface CurrentPlayback {
   playId: string;
   title: string;
   url: string;
+  fit: Fit;
   /** Timestamp (ms) em que o vídeo deve começar. */
   startAt: number;
 }
@@ -88,11 +93,12 @@ export function readCurrent(meta: Record<string, unknown>): CurrentPlayback | nu
   return cur && cur.playId ? cur : null;
 }
 
-export async function playCutscene(c: { title: string; url: string }) {
+export async function playCutscene(c: Cutscene) {
   const current: CurrentPlayback = {
     playId: uid(),
     title: c.title,
     url: c.url,
+    fit: c.fit ?? "cover",
     startAt: Date.now() + LEAD_MS,
   };
   await OBR.room.setMetadata({ [CURRENT_KEY]: current });

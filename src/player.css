@@ -13,7 +13,8 @@ html, body {
   height: 100%;
   border: 0;
 }
-#stage video { object-fit: contain; background: #000; }
+#stage video { background: #000; }
+#stage iframe.yt { position: absolute; }
 /* Camada invisível por cima do YouTube: impede pausar com clique e esconde o hover do player */
 #shield { position: absolute; inset: 0; z-index: 1; }
 #shield[hidden] { display: none; }
