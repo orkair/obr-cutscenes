@@ -200,7 +200,23 @@ async function close() {
   await OBR.modal.close(MODAL_ID);
 }
 
+/* ---------- Tela cheia (some com a barra do navegador no celular) ---------- */
+
+function setupFullscreen() {
+  const btn = document.getElementById("fullscreen") as HTMLButtonElement;
+  // Só funciona se o Owlbear permitir tela cheia para o iframe da extensão
+  if (!document.fullscreenEnabled) return;
+
+  const update = () => (btn.hidden = Boolean(document.fullscreenElement));
+  btn.onclick = () => {
+    document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+  };
+  document.addEventListener("fullscreenchange", update);
+  update();
+}
+
 async function run() {
+  setupFullscreen();
   const playId = new URLSearchParams(location.search).get("play");
   const meta = await OBR.room.getMetadata();
   const cur = readCurrent(meta);
