@@ -1,0 +1,18 @@
+{
+  "name": "Cutscenes",
+  "version": "0.1.0",
+  "manifest_version": 1,
+  "description": "Dispare cutscenes em tela cheia (YouTube ou mp4) para todos da sala ao mesmo tempo.",
+  "icon": "/icon.svg",
+  "background_url": "/background.html",
+  "action": {
+    "title": "Cutscenes",
+    "icon": "/icon.svg",
+    "popover": "/",
+    "width": 360,
+    "height": 520
+  },
+  "permissions": [
+    { "name": "autoplay", "reason": "Tocar as cutscenes com som automaticamente para todos" }
+  ]
+}
